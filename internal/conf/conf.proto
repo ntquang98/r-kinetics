@@ -1,0 +1,48 @@
+syntax = "proto3";
+package kratos.api;
+
+option go_package = "go-rkinetics-service/internal/conf;conf";
+
+import "google/protobuf/duration.proto";
+
+message Bootstrap {
+  Server server = 1;
+  Data data = 2;
+}
+
+message Server {
+  message HTTP {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration timeout = 3;
+  }
+  message GRPC {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration timeout = 3;
+  }
+  HTTP http = 1;
+  GRPC grpc = 2;
+}
+
+message Data {
+  message Mongo {
+    string address = 1;
+    string username = 2;
+    string password = 3;
+    string authdb = 4;
+    string dbname = 5;
+    bool ssl = 6;
+    bool secondary_preferred = 7;
+    bool do_write_test = 8;
+  }
+  Mongo mongo = 1;
+
+  message S3 {
+    string access = 1;
+    string secret = 2;
+    string region = 3;
+    string bucket = 4;
+  }
+  S3 s3 = 2;
+}

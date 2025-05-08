@@ -1,0 +1,26 @@
+server:
+  http:
+    addr: 0.0.0.0:8000
+    timeout: 
+      seconds: 1
+      nanos: 0
+  grpc:
+    addr: 0.0.0.0:9000
+    timeout:
+      seconds: 1
+      nanos: 0
+data:
+  mongo:
+    address: "${APP_DATA_MONGO_ADDRESS}"
+    username: "${APP_DATA_MONGO_USERNAME}"
+    password: "${APP_DATA_MONGO_PASSWORD}"
+    authdb: "${APP_DATA_MONGO_AUTH_DB}"
+    dbname: "${APP_DATA_MONGO_DB_NAME}"
+    ssl: false
+    secondary_preferred: false
+    do_write_test: true
+  s3:
+    access: "${APP_DATA_S3_ACCESS_KEY}"
+    secret: "${APP_DATA_S3_SECRET_KEY}"
+    region: "${APP_DATA_S3_REGION}" 
+    bucket: "${APP_DATA_S3_BUCKET}"
