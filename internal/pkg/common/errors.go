@@ -29,6 +29,15 @@ const (
 	ErrorCodeDBTransactionFailed = "DB_TRANSACTION_FAILED"
 	ErrorCodeInvalidRequest      = "INVALID"
 	ErrorCodeInternalError       = "INTERNAL_ERROR"
+	// Database
+	ErrorColNotInit = "COLLECTION_NOT_INITIALIZED"
+	ErrorConversion = "CONVERSION_ERROR"
+	ErrorNotFound   = "NOT_FOUND"
+	ErrorCreate     = "INSERT_ERROR"
+	ErrorUpdate     = "UPDATE_ERROR"
+	ErrorDelete     = "DELETE_ERROR"
+	ErrorCount      = "COUNT_ERROR"
+	ErrorAggregate  = "AGGREGATE_ERROR"
 )
 
 type Error struct {

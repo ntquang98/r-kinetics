@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -51,11 +52,15 @@ func UploadFileHandler(file *service.FileService, logger log.Logger) http.Handle
 			return
 		}
 
-		responder := NewHTTPResponder("")
-		resp := file.UploadFile(r.Context(), r)
-		if err := responder.Respond(w, r, resp); err != nil {
-			http.Error(w, "failed to encode response", http.StatusInternalServerError)
+		fileURL, err := file.UploadFile(r.Context(), r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"fileURL": fileURL})
+
+		return
 	}
 }

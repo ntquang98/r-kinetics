@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ntquang98/go-rkinetics-service/internal/conf"
-	"github.com/ntquang98/go-rkinetics-service/internal/pkg/common"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -116,12 +115,11 @@ func (c *Client) Connect(ctx context.Context) error {
 	if c.config.DoWriteTest {
 		inst := NewDBInstance[*ConnectionLog]("_db_connection")
 		inst.ApplyDatabase(c.database)
-		result := inst.Create(context.TODO(), ConnectionLog{
+		if _, err := inst.Create(context.TODO(), ConnectionLog{
 			Host:          appName,
 			ConnectedTime: time.Now(),
-		})
-		if result.Status != common.APIStatus.Ok {
-			return fmt.Errorf("write test failed: %s", result.Message)
+		}); err != nil {
+			return fmt.Errorf("write test failed: %v", err)
 		}
 	}
 

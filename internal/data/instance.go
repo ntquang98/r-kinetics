@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/ntquang98/go-rkinetics-service/internal/pkg/common"
 	"github.com/ntquang98/go-rkinetics-service/internal/pkg/encoding"
 	"github.com/ntquang98/go-rkinetics-service/internal/pkg/pointer"
@@ -105,7 +106,7 @@ func (m *Instance[T]) GetChangeStream(dbName string, collectionName string, cb f
 //
 // @handler: the transaction will be committed when give a non-error
 // @isolation: will be default value when given nil attributes
-func (m *Instance[T]) ApplyTransaction(handler func(ctx SessionContext) ([]T, error), isolation *Isolation) *common.APIResponse[T] {
+func (m *Instance[T]) ApplyTransaction(handler func(ctx SessionContext) ([]T, error), isolation *Isolation) ([]T, error) {
 	// setup Isolation & txn option
 	if isolation == nil {
 		isolation = &defaultIsolation
@@ -122,11 +123,7 @@ func (m *Instance[T]) ApplyTransaction(handler func(ctx SessionContext) ([]T, er
 	// start session
 	session, err := m.db.Client().StartSession()
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "Failed to start session on " + m.db.Name() + " with error: " + err.Error(),
-			ErrorCode: common.ErrorCodeDBTransactionFailed,
-		}
+		return nil, errors.InternalServer(common.ErrorCodeDBTransactionFailed, "Failed to start session on "+m.db.Name()+" with error: "+err.Error())
 	}
 	defer session.EndSession(context.TODO())
 
@@ -138,24 +135,13 @@ func (m *Instance[T]) ApplyTransaction(handler func(ctx SessionContext) ([]T, er
 	// apply transaction
 	result, txnErr := session.WithTransaction(context.TODO(), wrapHandler, txnOpts)
 	if txnErr != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "Failed to commit transaction with error: " + txnErr.Error(),
-			ErrorCode: common.ErrorCodeDBTransactionFailed,
-		}
+		return nil, errors.InternalServer(common.ErrorCodeDBTransactionFailed, "Failed to commit transaction with error: "+txnErr.Error())
 	}
 	if results, ok := result.([]T); ok {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Ok,
-			Data:    results,
-			Message: "Transaction has been committed successfully",
-		}
+		return results, nil
 	}
 
-	return &common.APIResponse[T]{
-		Status:  common.APIStatus.Error,
-		Message: "Internal error",
-	}
+	return nil, errors.InternalServer(common.ErrorCodeInternalError, "internal Error")
 }
 
 // convertToBson Go object to map (to get / query)
@@ -234,38 +220,30 @@ func (m *Instance[T]) interfaceSlice(slice any) ([]any, error) {
 	return ret, nil
 }
 
-func (m *Instance[T]) parseSingleResult(result *mongo.SingleResult, action string) *common.APIResponse[T] {
+func (m *Instance[T]) parseSingleResult(result *mongo.SingleResult, action string) ([]T, error) {
 	var obj T
 	err := result.Decode(&obj)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "DB Error: " + err.Error(),
-			ErrorCode: common.ErrorCodeInvalidBson,
-		}
+		return nil, errors.InternalServer(common.ErrorCodeInvalidBson, "DB Error: "+err.Error())
 	}
 
 	// put to slice
 	var sliceData = make([]T, 0, 1)
 	sliceData = append(sliceData, obj)
-	return &common.APIResponse[T]{
-		Status:  common.APIStatus.Ok,
-		Message: action + " " + m.ColName + " successfully.",
-		Data:    sliceData,
-	}
+	return sliceData, nil
 }
 
 // ========================================= METHOD =====================================
 
 // Create inserts a single document
-func (m *Instance[T]) Create(ctx context.Context, entity any, opts ...*options.InsertOneOptions) *common.APIResponse[T] {
+func (m *Instance[T]) Create(ctx context.Context, entity any, opts ...*options.InsertOneOptions) ([]T, error) {
 	if m.col == nil {
-		return &common.APIResponse[T]{Status: common.APIStatus.Error, Message: fmt.Sprintf("collection %s not initialized", m.ColName)}
+		return nil, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	bsonM, err := encoding.ToBSON(entity)
 	if err != nil {
-		return &common.APIResponse[T]{Status: common.APIStatus.Error, Message: "bson conversion error: " + err.Error(), ErrorCode: "INVALID_BSON"}
+		return nil, errors.BadRequest(common.ErrorCodeInvalidBson, "bson conversion error: "+err.Error())
 	}
 
 	if bsonM["created_time"] == nil {
@@ -275,38 +253,27 @@ func (m *Instance[T]) Create(ctx context.Context, entity any, opts ...*options.I
 
 	result, err := m.col.InsertOne(ctx, bsonM, opts...)
 	if err != nil {
-		return &common.APIResponse[T]{Status: common.APIStatus.Error, Message: "insert error: " + err.Error()}
+		return nil, errors.InternalServer(common.ErrorCreate, "insert error: "+err.Error())
 	}
 
 	bsonM["_id"] = result.InsertedID
 	data, err := m.convertToObject(bsonM)
 	if err != nil {
-		return &common.APIResponse[T]{Status: common.APIStatus.Error, Message: "convert error: " + err.Error()}
+		return nil, errors.InternalServer(common.ErrorConversion, "convert error: "+err.Error())
 	}
 
-	return &common.APIResponse[T]{
-		Status:  common.APIStatus.Ok,
-		Message: fmt.Sprintf("created %s successfully", m.ColName),
-		Data:    []T{data},
-	}
+	return []T{data}, nil
 }
 
-func (m *Instance[T]) CreateMany(ctx context.Context, entityList any) *common.APIResponse[any] {
+func (m *Instance[T]) CreateMany(ctx context.Context, entityList any) ([]interface{}, error) {
 	// check col
 	if m.col == nil {
-		return &common.APIResponse[any]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Collection " + m.ColName + " is not initialized yet",
-		}
+		return nil, errors.InternalServer(common.ErrorColNotInit, "DB error: Collection "+m.ColName+" is not initialized yet")
 	}
 
 	list, err := m.interfaceSlice(entityList)
 	if err != nil {
-		return &common.APIResponse[any]{
-			Status:    common.APIStatus.Error,
-			Message:   "DB error: " + err.Error(),
-			ErrorCode: common.ErrorCodeNonSlice,
-		}
+		return nil, errors.InternalServer(common.ErrorCodeNonSlice, "DB error: "+err.Error())
 	}
 
 	var bsonList []any
@@ -315,11 +282,7 @@ func (m *Instance[T]) CreateMany(ctx context.Context, entityList any) *common.AP
 		// convert to bson
 		bsonM, err := encoding.ToBSON(item)
 		if err != nil {
-			return &common.APIResponse[any]{
-				Status:    common.APIStatus.Error,
-				Message:   "DB error: Invalid bson object - " + err.Error(),
-				ErrorCode: common.ErrorCodeInvalidBson,
-			}
+			return nil, errors.InternalServer(common.ErrorCodeInvalidBson, "DB error: Invalid bson object -  "+err.Error())
 		}
 
 		if bsonM["created_time"] == nil {
@@ -335,24 +298,16 @@ func (m *Instance[T]) CreateMany(ctx context.Context, entityList any) *common.AP
 
 	result, err := m.col.InsertMany(ctx, bsonList, opt)
 	if err != nil && len(result.InsertedIDs) == 0 {
-		return &common.APIResponse[any]{
-			Status:    common.APIStatus.Error,
-			Message:   "DB Error: " + err.Error(),
-			ErrorCode: "CREATE_FAILED",
-		}
+		return nil, errors.InternalServer(common.ErrorCreate, "DB error: "+err.Error())
 	}
 
-	return &common.APIResponse[any]{
-		Status:  common.APIStatus.Ok,
-		Message: "Create " + m.ColName + "(s) successfully.",
-		Data:    result.InsertedIDs,
-	}
+	return result.InsertedIDs, nil
 }
 
 // Query retrieves documents with pagination and sorting
-func (m *Instance[T]) Query(ctx context.Context, query any, offset, limit int64, sortFields *primitive.D) *common.APIResponse[T] {
+func (m *Instance[T]) Query(ctx context.Context, query any, offset, limit int64, sortFields *primitive.D) ([]T, error) {
 	if m.col == nil {
-		return &common.APIResponse[T]{Status: common.APIStatus.Error, Message: fmt.Sprintf("collection %s not initialized", m.ColName)}
+		return nil, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	opt := &options.FindOptions{Limit: &limit, Skip: &offset}
@@ -366,12 +321,12 @@ func (m *Instance[T]) Query(ctx context.Context, query any, offset, limit int64,
 
 	bsonM, err := encoding.ToBSON(query)
 	if err != nil {
-		return &common.APIResponse[T]{Status: common.APIStatus.Error, Message: "bson conversion error: " + err.Error()}
+		return nil, errors.InternalServer(common.ErrorConversion, "bson conversion error: "+err.Error())
 	}
 
 	result, err := m.col.Find(ctx, bsonM, opt)
 	if err != nil || result.Err() != nil {
-		return &common.APIResponse[T]{Status: common.APIStatus.Error, Message: fmt.Sprintf("no %s found", m.ColName), ErrorCode: "NOT_FOUND"}
+		return nil, errors.NotFound(common.ErrorNotFound, fmt.Sprintf("no %s found", m.ColName))
 	}
 	defer result.Close(ctx)
 
@@ -379,41 +334,26 @@ func (m *Instance[T]) Query(ctx context.Context, query any, offset, limit int64,
 	if err = result.All(ctx,
 
 		&list); err != nil || len(list) == 0 {
-		return &common.APIResponse[T]{Status: common.APIStatus.Error, Message: fmt.Sprintf("no %s found", m.ColName), ErrorCode: "NOT_FOUND"}
+		return nil, errors.NotFound(common.ErrorNotFound, fmt.Sprintf("no %s found", m.ColName))
 	}
 
-	return &common.APIResponse[T]{
-		Status:  common.APIStatus.Ok,
-		Message: fmt.Sprintf("queried %s successfully", m.ColName),
-		Data:    list,
-	}
+	return list, nil
 }
 
 func (m *Instance[T]) Update(ctx context.Context, query any, updater any,
-	opts ...*options.FindOneAndUpdateOptions) *common.APIResponse[T] {
+	opts ...*options.FindOneAndUpdateOptions) ([]T, error) {
 	if m.col == nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Collection " + m.ColName + "is not initialized yet",
-		}
+		return nil, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	bUpdater, err := encoding.ToBSON(updater)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "DB error: " + err.Error(),
-			ErrorCode: common.ErrorCodeInvalidBson,
-		}
+		return nil, errors.InternalServer(common.ErrorCodeInvalidBson, fmt.Sprintf("DB error: %v", err.Error()))
 	}
 
 	bQuery, err := encoding.ToBSON(query)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "DB error: " + err.Error(),
-			ErrorCode: common.ErrorCodeInvalidBson,
-		}
+		return nil, errors.InternalServer(common.ErrorCodeInvalidBson, fmt.Sprintf("DB error: %v", err.Error()))
 	}
 
 	bUpdater["last_updated_time"] = time.Now()
@@ -428,37 +368,26 @@ func (m *Instance[T]) Update(ctx context.Context, query any, updater any,
 		if result != nil {
 			detail = result.Err().Error()
 		}
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.NotFound,
-			Message:   "Not found any matched " + m.ColName + ". Error detail: " + detail,
-			ErrorCode: "NOT_FOUND",
-		}
+		return nil, errors.NotFound(common.ErrorNotFound, "Not found any matched "+m.ColName+". Error detail: "+detail)
 	}
 
 	return m.parseSingleResult(result, "UpdateOne")
 }
 
-func (m *Instance[T]) UpdateOne(ctx context.Context, query any, updater any) *common.APIResponse[T] {
+func (m *Instance[T]) UpdateOne(ctx context.Context, query any, updater any) ([]T, error) {
 	return m.Update(ctx, query, updater, options.FindOneAndUpdate().SetReturnDocument(options.After))
 }
 
 func (m *Instance[T]) UpdateMany(ctx context.Context, query any, updater any,
-	opts ...*options.UpdateOptions) *common.APIResponse[T] {
+	opts ...*options.UpdateOptions) ([]T, error) {
 	// check col
 	if m.col == nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Collection " + m.ColName + " is not initialized yet",
-		}
+		return nil, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	bUpdater, err := encoding.ToBSON(updater)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "DB Error: " + err.Error(),
-			ErrorCode: common.ErrorCodeInvalidBson,
-		}
+		return nil, errors.InternalServer(common.ErrorCodeInvalidBson, fmt.Sprintf("DB Error: %s", err.Error()))
 	}
 
 	bUpdater["last_updated_time"] = time.Now()
@@ -466,10 +395,7 @@ func (m *Instance[T]) UpdateMany(ctx context.Context, query any, updater any,
 	// convert to bUpdater
 	bQuery, err := encoding.ToBSON(query)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Cannot convert object - " + err.Error(),
-		}
+		return nil, errors.InternalServer(common.ErrorConversion, "DB error: Cannot convert object - "+err.Error())
 	}
 
 	// do update
@@ -477,43 +403,26 @@ func (m *Instance[T]) UpdateMany(ctx context.Context, query any, updater any,
 		"$set": bUpdater,
 	}, opts...)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "Update error: UpdateManyWithCtx - " + err.Error(),
-			ErrorCode: "UPDATE_FAILED",
-		}
+		return nil, errors.InternalServer(common.ErrorUpdate, "Update error: UpdateManyWithCtx - "+err.Error())
 	}
 
 	if result.MatchedCount == 0 {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Ok,
-			Message: "Not found any " + m.ColName + ".",
-		}
+		return nil, errors.NotFound(common.ErrorNotFound, "Not found any "+m.ColName+".")
 	}
 
-	return &common.APIResponse[T]{
-		Status:  common.APIStatus.Ok,
-		Message: "Update " + m.ColName + " successfully.",
-	}
+	return nil, nil
 }
 
-func (m *Instance[T]) Upsert(ctx context.Context, query any, updater any) *common.APIResponse[T] {
+func (m *Instance[T]) Upsert(ctx context.Context, query any, updater any) ([]T, error) {
 	// check col
 	if m.col == nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Collection " + m.ColName + " is not initialized yet",
-		}
+		return nil, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	// convert to bson
 	bUpdater, err := encoding.ToBSON(updater)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "DB Error: " + err.Error(),
-			ErrorCode: common.ErrorCodeInvalidBson,
-		}
+		return nil, errors.InternalServer(common.ErrorCodeInvalidBson, fmt.Sprintf("DB Error: %s", err.Error()))
 	}
 
 	if bUpdater["_id"] != nil {
@@ -531,10 +440,7 @@ func (m *Instance[T]) Upsert(ctx context.Context, query any, updater any) *commo
 	// convert to bson
 	bQuery, err := encoding.ToBSON(query)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Cannot convert object - " + err.Error(),
-		}
+		return nil, errors.InternalServer(common.ErrorConversion, "DB error: Cannot convert object - "+err.Error())
 	}
 
 	upsertOpt := &options.FindOneAndUpdateOptions{
@@ -553,33 +459,22 @@ func (m *Instance[T]) Upsert(ctx context.Context, query any, updater any) *commo
 		if result != nil {
 			detail = result.Err().Error()
 		}
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.NotFound,
-			Message:   "Not found any matched " + m.ColName + ". Error detail: " + detail,
-			ErrorCode: "NOT_FOUND",
-		}
+		return nil, errors.NotFound(common.ErrorNotFound, "Not found any matched "+m.ColName+". Error detail: "+detail)
 	}
 
 	return m.parseSingleResult(result, "UpdateOne")
 }
 
-func (m *Instance[T]) ReleaseOne(ctx context.Context, query any, replacement any, opts ...*options.FindOneAndReplaceOptions) *common.APIResponse[T] {
+func (m *Instance[T]) ReleaseOne(ctx context.Context, query any, replacement any, opts ...*options.FindOneAndReplaceOptions) ([]T, error) {
 	// check col
 	if m.col == nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Collection " + m.ColName + " is not initialized yet",
-		}
+		return nil, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	// convert
 	bReplacement, err := m.convertToBson(replacement)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "DB Error: " + err.Error(),
-			ErrorCode: "MAP_OBJECT_FAILED",
-		}
+		return nil, errors.InternalServer(common.ErrorCodeInvalidBson, fmt.Sprintf("DB Error: %s", err.Error()))
 	}
 
 	if bReplacement["created_time"] == nil {
@@ -590,10 +485,7 @@ func (m *Instance[T]) ReleaseOne(ctx context.Context, query any, replacement any
 	// transform to bson
 	converted, err := m.convertToBson(query)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: ReplaceOne - Cannot convert object - " + err.Error(),
-		}
+		return nil, errors.InternalServer(common.ErrorConversion, "DB error: ReplaceOne - Cannot convert object - "+err.Error())
 	}
 
 	// do replace
@@ -603,65 +495,43 @@ func (m *Instance[T]) ReleaseOne(ctx context.Context, query any, replacement any
 		if result != nil {
 			detail = result.Err().Error()
 		}
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.NotFound,
-			Message:   "Not found any matched " + m.ColName + ". Error detail: " + detail,
-			ErrorCode: "NOT_FOUND",
-		}
+		return nil, errors.NotFound(common.ErrorNotFound, "Not found any matched "+m.ColName+". Error detail: "+detail)
 	}
 
 	return m.parseSingleResult(result, "ReplaceOne")
 }
 
 func (m *Instance[T]) Delete(ctx context.Context, query any,
-	opts ...*options.DeleteOptions) *common.APIResponse[T] {
+	opts ...*options.DeleteOptions) ([]T, error) {
 	// check col
 	if m.col == nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Collection " + m.ColName + " is not initialized yet",
-		}
+		return nil, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	// convert query
 	converted, err := encoding.ToBSON(query)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Cannot convert object - " + err.Error(),
-		}
+		return nil, errors.InternalServer(common.ErrorConversion, "DB error: Cannot convert object - "+err.Error())
 	}
 
 	_, err = m.col.DeleteMany(ctx, converted, opts...)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "DB error: " + err.Error(),
-			ErrorCode: "DELETE_FAILED",
-		}
+		return nil, errors.InternalServer(common.ErrorDelete, "DB error: "+err.Error())
 	}
-	return &common.APIResponse[T]{
-		Status:  common.APIStatus.Ok,
-		Message: "Delete " + m.ColName + " successfully.",
-	}
+
+	return nil, nil
 }
 
-func (m *Instance[T]) Count(ctx context.Context, query any, opts ...*options.CountOptions) *common.APIResponse[T] {
+func (m *Instance[T]) Count(ctx context.Context, query any, opts ...*options.CountOptions) (int64, error) {
 	// check col
 	if m.col == nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Collection " + m.ColName + " is not initialized yet",
-		}
+		return 0, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	// convert query
 	converted, err := encoding.ToBSON(query)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Cannot convert object - " + err.Error(),
-		}
+		return 0, errors.InternalServer(common.ErrorConversion, "DB error: Cannot convert object - "+err.Error())
 	}
 
 	// if query is empty -> count by EstimatedDocumentCount else count by CountDocuments
@@ -672,28 +542,16 @@ func (m *Instance[T]) Count(ctx context.Context, query any, opts ...*options.Cou
 		count, err = m.col.CountDocuments(ctx, converted, opts...)
 	}
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:    common.APIStatus.Error,
-			Message:   "Count error: " + err.Error(),
-			ErrorCode: "COUNT_FAILED",
-		}
+		return 0, errors.InternalServer(common.ErrorCount, "DB error: "+err.Error())
 	}
 
-	return &common.APIResponse[T]{
-		Status:  common.APIStatus.Ok,
-		Message: "Count query executed successfully.",
-		Total:   count,
-	}
-
+	return count, nil
 }
 
-func (m *Instance[T]) IncreaseOne(ctx context.Context, query any, fieldName string, value int) *common.APIResponse[T] {
+func (m *Instance[T]) IncreaseOne(ctx context.Context, query any, fieldName string, value int) ([]T, error) {
 	// check col
 	if m.col == nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Collection " + m.ColName + " is not initialized yet",
-		}
+		return nil, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	updater := bson.M{
@@ -716,10 +574,7 @@ func (m *Instance[T]) IncreaseOne(ctx context.Context, query any, fieldName stri
 	// convert query
 	bsonM, err := encoding.ToBSON(query)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Cannot convert object - " + err.Error(),
-		}
+		return nil, errors.InternalServer(common.ErrorConversion, "DB error: Cannot convert object - "+err.Error())
 	}
 
 	result := m.col.FindOneAndUpdate(ctx, bsonM, updater, &opt)
@@ -728,65 +583,43 @@ func (m *Instance[T]) IncreaseOne(ctx context.Context, query any, fieldName stri
 }
 
 func (m *Instance[T]) Aggregate(ctx context.Context, pipeline any, result any,
-	opts ...*options.AggregateOptions) *common.APIResponse[T] {
+	opts ...*options.AggregateOptions) ([]T, error) {
 	// check col
 	if m.col == nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Collection " + m.ColName + " is not initialized yet",
-		}
+		return nil, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	q, err := m.col.Aggregate(ctx, pipeline, opts...)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: AggregateWithCtx - " + err.Error(),
-		}
+		return nil, errors.InternalServer(common.ErrorAggregate, "DB error: AggregateWithCtx - "+err.Error())
 	}
 	err = q.All(context.TODO(), result)
 	if err != nil {
-		return &common.APIResponse[T]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: AggregateWithCtx - " + err.Error(),
-		}
+		return nil, errors.InternalServer(common.ErrorAggregate, "DB error: AggregateWithCtx - "+err.Error())
 	}
 
-	return &common.APIResponse[T]{
-		Status: common.APIStatus.Ok,
-	}
+	return nil, nil
 }
 
 // DistinctWithCtx ...
 func (m *Instance[T]) Distinct(ctx context.Context, query any, field string,
-	opts ...*options.DistinctOptions) *common.APIResponse[any] {
+	opts ...*options.DistinctOptions) ([]interface{}, error) {
 	// check col
 	if m.col == nil {
-		return &common.APIResponse[any]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Collection " + m.ColName + " is not initialized yet",
-		}
+		return nil, errors.InternalServer(common.ErrorColNotInit, fmt.Sprintf("collection %s not initialized", m.ColName))
 	}
 
 	// convert query
 	converted, err := encoding.ToBSON(query)
 	if err != nil {
-		return &common.APIResponse[any]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: Cannot convert object - " + err.Error(),
-		}
+		return nil, errors.InternalServer(common.ErrorConversion, "DB error: Cannot convert object - "+err.Error())
 	}
 
 	result, err := m.col.Distinct(ctx, field, converted, opts...)
 
 	if err != nil {
-		return &common.APIResponse[any]{
-			Status:  common.APIStatus.Error,
-			Message: "DB error: DistinctWithCtx " + err.Error(),
-		}
+		return nil, errors.InternalServer(common.ErrorConversion, "DB error: DistinctWithCtx "+err.Error())
 	}
-	return &common.APIResponse[any]{
-		Status: common.APIStatus.Ok,
-		Data:   result,
-	}
+
+	return result, nil
 }
