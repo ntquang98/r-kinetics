@@ -1,6 +1,7 @@
 package server
 
 import (
+	v1App "github.com/ntquang98/go-rkinetics-service/api/app/v1"
 	v1File "github.com/ntquang98/go-rkinetics-service/api/file/v1"
 	v1 "github.com/ntquang98/go-rkinetics-service/api/helloworld/v1"
 	"github.com/ntquang98/go-rkinetics-service/internal/conf"
@@ -13,7 +14,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, file *service.FileService, logger log.Logger) *transhttp.Server {
+func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, file *service.FileService, analyticJob *service.AnalyticsJobService, logger log.Logger) *transhttp.Server {
 	var opts = []transhttp.ServerOption{
 		transhttp.Middleware(
 			recovery.Recovery(),
@@ -30,7 +31,7 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, file *servic
 	}
 	srv := transhttp.NewServer(opts...)
 	v1.RegisterGreeterHTTPServer(srv, greeter)
-
+	v1App.RegisterAnalyticsJobHTTPServer(srv, analyticJob)
 	v1Router := srv.Route("/v1")
 	v1Router.POST("/file-upload", fileUploadHandler(file, logger))
 

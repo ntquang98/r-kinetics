@@ -25,6 +25,62 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/helloworld.v1.HelloReply'
+    /v1/analytics-job:
+        get:
+            tags:
+                - AnalyticsJob
+            operationId: AnalyticsJob_ListAnalyticsJob
+            parameters:
+                - name: offset
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.app.v1.ListAnalyticsJobReply'
+        post:
+            tags:
+                - AnalyticsJob
+            operationId: AnalyticsJob_CreateAnalyticsJob
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.app.v1.CreateAnalyticsJobRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.app.v1.CreateAnalyticsJobReply'
+    /v1/analytics-job/{id}:
+        get:
+            tags:
+                - AnalyticsJob
+            operationId: AnalyticsJob_GetAnalyticsJob
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.app.v1.GetAnalyticsJobReply'
     /v1/file-upload:
         post:
             tags:
@@ -45,6 +101,63 @@ paths:
                                 $ref: '#/components/schemas/api.file.v1.UploadFileReply'
 components:
     schemas:
+        api.app.v1.AnalyticsJobModel:
+            type: object
+            properties:
+                id:
+                    type: string
+                createdTime:
+                    type: string
+                    format: date-time
+                lastUpdatedTime:
+                    type: string
+                    format: date-time
+                latitude:
+                    type: number
+                    format: double
+                longitude:
+                    type: number
+                    format: double
+                fileUrl:
+                    type: string
+                videoUrl:
+                    type: string
+                status:
+                    type: string
+                result:
+                    type: string
+        api.app.v1.CreateAnalyticsJobReply:
+            type: object
+            properties:
+                data:
+                    $ref: '#/components/schemas/api.app.v1.AnalyticsJobModel'
+        api.app.v1.CreateAnalyticsJobRequest:
+            type: object
+            properties:
+                latitude:
+                    type: number
+                    format: double
+                longitude:
+                    type: number
+                    format: double
+                fileUrl:
+                    type: string
+                videoUrl:
+                    type: string
+        api.app.v1.GetAnalyticsJobReply:
+            type: object
+            properties:
+                data:
+                    $ref: '#/components/schemas/api.app.v1.AnalyticsJobModel'
+        api.app.v1.ListAnalyticsJobReply:
+            type: object
+            properties:
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.app.v1.AnalyticsJobModel'
+                total:
+                    type: string
         api.file.v1.UploadFileReply:
             type: object
             properties:
@@ -62,6 +175,7 @@ components:
                     type: string
             description: The response message containing the greetings
 tags:
+    - name: AnalyticsJob
     - name: File
     - name: Greeter
       description: The greeting service definition.

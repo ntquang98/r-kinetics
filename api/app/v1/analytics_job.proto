@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package api.app.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/ntquang98/go-rkinetics-service/api/app/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.app.v1";
+
+service AnalyticsJob {
+	rpc CreateAnalyticsJob (CreateAnalyticsJobRequest) returns (CreateAnalyticsJobReply) {	
+		option (google.api.http) = {
+			post: "/v1/analytics-job"
+			body: "*"
+		};
+	}
+	rpc GetAnalyticsJob (GetAnalyticsJobRequest) returns (GetAnalyticsJobReply) {
+		option (google.api.http) = {
+			get: "/v1/analytics-job/{id}"
+		};
+	}
+	rpc ListAnalyticsJob (ListAnalyticsJobRequest) returns (ListAnalyticsJobReply) {
+		option (google.api.http) = {
+			get: "/v1/analytics-job"
+		};
+	}
+}
+
+message AnalyticsJobModel {
+	string id = 1;
+	google.protobuf.Timestamp created_time = 2;
+	google.protobuf.Timestamp last_updated_time = 3;
+	double latitude = 4;
+	double longitude = 5;
+	string file_url = 6;
+	string video_url = 7;
+	string status = 8;
+	string result = 9;	
+}
+
+message CreateAnalyticsJobRequest {
+	double latitude = 1;
+	double longitude = 2;
+	string file_url = 3;
+	string video_url = 4;
+}
+message CreateAnalyticsJobReply {
+	AnalyticsJobModel data = 1;
+}
+
+message GetAnalyticsJobRequest {
+	string id = 1;
+}
+message GetAnalyticsJobReply {
+	AnalyticsJobModel data = 1;
+}
+
+message ListAnalyticsJobRequest {
+	int64 offset = 1;
+	int64 limit = 2;
+}
+message ListAnalyticsJobReply {
+	repeated AnalyticsJobModel data = 1;
+	int64 total = 2;
+}

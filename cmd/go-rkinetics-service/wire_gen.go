@@ -35,7 +35,10 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	fileRepo := data.NewS3FileRepo(confData, logger)
 	fileUsecase := biz.NewFileUsecase(fileRepo, logger)
 	fileService := service.NewFileService(fileUsecase, logger)
-	httpServer := server.NewHTTPServer(confServer, greeterService, fileService, logger)
+	analyticsJobRepo := data.NewAnalyticsJobRepo(dataData, logger)
+	analyticsJobUsecase := biz.NewAnalyticsJobUsecase(analyticsJobRepo, logger)
+	analyticsJobService := service.NewAnalyticsJobService(analyticsJobUsecase, logger)
+	httpServer := server.NewHTTPServer(confServer, greeterService, fileService, analyticsJobService, logger)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup()
