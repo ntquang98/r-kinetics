@@ -3,8 +3,7 @@
 
 openapi: 3.0.3
 info:
-    title: Greeter API
-    description: The greeting service definition.
+    title: ""
     version: 0.0.1
 paths:
     /helloworld/{name}:
@@ -26,8 +25,36 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/helloworld.v1.HelloReply'
+    /v1/file-upload:
+        post:
+            tags:
+                - File
+            operationId: File_UploadFile
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.file.v1.UploadFileRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.file.v1.UploadFileReply'
 components:
     schemas:
+        api.file.v1.UploadFileReply:
+            type: object
+            properties:
+                fileUrl:
+                    type: string
+        api.file.v1.UploadFileRequest:
+            type: object
+            properties:
+                filename:
+                    type: string
         helloworld.v1.HelloReply:
             type: object
             properties:
@@ -35,4 +62,6 @@ components:
                     type: string
             description: The response message containing the greetings
 tags:
+    - name: File
     - name: Greeter
+      description: The greeting service definition.

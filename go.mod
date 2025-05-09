@@ -13,7 +13,6 @@ require (
 	github.com/go-kratos/kratos/v2 v2.8.4
 	github.com/go-kratos/swagger-api v1.0.1
 	github.com/google/wire v0.6.0
-	github.com/gorilla/mux v1.8.1
 	github.com/json-iterator/go v1.1.12
 	github.com/spf13/viper v1.20.1
 	go.mongodb.org/mongo-driver v1.17.3
@@ -51,6 +50,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.5.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect

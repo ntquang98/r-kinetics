@@ -3,17 +3,18 @@ package data
 import (
 	"context"
 	"fmt"
-	"mime/multipart"
-	"path/filepath"
+	"io"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/ntquang98/go-rkinetics-service/internal/biz"
 	"github.com/ntquang98/go-rkinetics-service/internal/conf"
+	"github.com/ntquang98/go-rkinetics-service/internal/pkg/common"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -46,28 +47,20 @@ func NewS3FileRepo(conf *conf.Data, logger log.Logger) biz.FileRepo {
 }
 
 // UploadFile uploads a file to S3 and returns its public URL
-func (r *s3FileRepo) UploadFile(ctx context.Context, file *multipart.FileHeader, contentType string) (string, error) {
-	f, err := file.Open()
-	if err != nil {
-		return "", fmt.Errorf("failed to open file: %w", err)
-	}
-	defer f.Close()
-
-	// Generate a unique key (e.g., uploads/12345-filename.jpg)
-	key := fmt.Sprintf("uploads/%s-%s", generateUniqueID(), filepath.Base(file.Filename))
+func (r *s3FileRepo) UploadFile(ctx context.Context, filename string, contentType string, fileReader io.Reader) (string, error) {
+	key := fmt.Sprintf("uploads/%s-%s", generateUniqueID(), filename)
 	uploader := manager.NewUploader(r.client)
-	_, err = uploader.Upload(ctx, &s3.PutObjectInput{
+	_, err := uploader.Upload(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(r.bucket),
 		Key:         aws.String(key),
-		Body:        f,
+		Body:        fileReader,
 		ContentType: aws.String(contentType),
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to upload file to S3: %w", err)
+		return "", errors.InternalServer(common.ErrorCodeInternalError, fmt.Sprintf("failed to upload file to S3: %s", err.Error()))
 	}
 
 	fileURL := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", r.bucket, r.region, key)
-	r.log.Infof("Uploaded file %s to S3 with URL %s", file.Filename, fileURL)
 	return fileURL, nil
 }
 

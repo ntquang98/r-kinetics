@@ -2,7 +2,7 @@ server:
   http:
     addr: 0.0.0.0:8000
     timeout: 
-      seconds: 1
+      seconds: 20
       nanos: 0
   grpc:
     addr: 0.0.0.0:9000

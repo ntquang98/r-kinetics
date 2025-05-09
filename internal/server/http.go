@@ -1,10 +1,7 @@
 package server
 
 import (
-	"encoding/json"
-	"net/http"
-
-	"github.com/gorilla/mux"
+	v1File "github.com/ntquang98/go-rkinetics-service/api/file/v1"
 	v1 "github.com/ntquang98/go-rkinetics-service/api/helloworld/v1"
 	"github.com/ntquang98/go-rkinetics-service/internal/conf"
 	"github.com/ntquang98/go-rkinetics-service/internal/service"
@@ -34,33 +31,26 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, file *servic
 	srv := transhttp.NewServer(opts...)
 	v1.RegisterGreeterHTTPServer(srv, greeter)
 
-	// ============= ROUTER ====================
-	router := mux.NewRouter()
-	router.HandleFunc("/upload", UploadFileHandler(file, logger)).Methods("POST")
-	srv.HandlePrefix("/upload", router)
+	v1Router := srv.Route("/v1")
+	v1Router.POST("/file-upload", fileUploadHandler(file, logger))
 
 	h := openapiv2.NewHandler()
 	srv.HandlePrefix("/q/", h)
 	return srv
 }
 
-// UploadFileHandler handles the file upload endpoint
-func UploadFileHandler(file *service.FileService, logger log.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
+func fileUploadHandler(fileSrv *service.FileService, logger log.Logger) func(ctx transhttp.Context) error {
+	return func(ctx transhttp.Context) error {
+		req := ctx.Request()
 
-		fileURL, err := file.UploadFile(r.Context(), r)
+		fileUrl, err := fileSrv.UploadFileHTTP(ctx, req)
+
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return err
 		}
 
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{"fileURL": fileURL})
-
-		return
+		return ctx.Result(200, &v1File.UploadFileReply{
+			FileUrl: fileUrl,
+		})
 	}
 }
