@@ -45,4 +45,11 @@ message Data {
     string bucket = 4;
   }
   S3 s3 = 2;
+
+  message SQS {
+    string qname = 1;
+    string account = 2;
+  }
+
+  SQS sqs = 3;
 }

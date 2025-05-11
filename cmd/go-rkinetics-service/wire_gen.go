@@ -37,7 +37,9 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	fileService := service.NewFileService(fileUsecase, logger)
 	analyticsJobRepo := data.NewAnalyticsJobRepo(dataData, logger)
 	analyticsJobUsecase := biz.NewAnalyticsJobUsecase(analyticsJobRepo, logger)
-	analyticsJobService := service.NewAnalyticsJobService(analyticsJobUsecase, logger)
+	queueRepo := data.NewSqsRepo(confData, logger)
+	queueUsecase := biz.NewQueueUsecase(queueRepo, logger)
+	analyticsJobService := service.NewAnalyticsJobService(analyticsJobUsecase, queueUsecase, logger)
 	httpServer := server.NewHTTPServer(confServer, greeterService, fileService, analyticsJobService, logger)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {

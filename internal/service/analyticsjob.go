@@ -3,24 +3,28 @@ package service
 import (
 	"context"
 
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	pb "github.com/ntquang98/go-rkinetics-service/api/app/v1"
 	"github.com/ntquang98/go-rkinetics-service/internal/biz"
 	"github.com/ntquang98/go-rkinetics-service/internal/domain"
+	"github.com/ntquang98/go-rkinetics-service/internal/pkg/common"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type AnalyticsJobService struct {
 	pb.UnimplementedAnalyticsJobServer
 
-	uc  *biz.AnalyticsJobUsecase
-	log *log.Helper
+	uc           *biz.AnalyticsJobUsecase
+	queueUsecase *biz.QueueUsecase
+	log          *log.Helper
 }
 
-func NewAnalyticsJobService(uc *biz.AnalyticsJobUsecase, logger log.Logger) *AnalyticsJobService {
+func NewAnalyticsJobService(uc *biz.AnalyticsJobUsecase, queueUsecase *biz.QueueUsecase, logger log.Logger) *AnalyticsJobService {
 	return &AnalyticsJobService{
-		uc:  uc,
-		log: log.NewHelper(logger),
+		uc:           uc,
+		queueUsecase: queueUsecase,
+		log:          log.NewHelper(logger),
 	}
 }
 
@@ -36,10 +40,30 @@ func (s *AnalyticsJobService) CreateAnalyticsJob(ctx context.Context, req *pb.Cr
 		return nil, err
 	}
 
+	id := result.ID.Hex()
+
+	err = s.queueUsecase.SendJob(ctx, map[string]string{
+		"job_id":       id,
+		"file_url":     result.FileUrl,
+		"video_url":    result.VideoUrl,
+		"callback_url": "http://go-api:8000/v1/analytics-job/result",
+	})
+
+	if err != nil {
+		s.log.Errorf("can't add job for %s", result.ID.Hex())
+	} else {
+		s.uc.UpdateAnalyticsJob(ctx, id, &domain.AnalyticsJob{
+			Status: domain.AnalyticsJobStatus.AssignedJob,
+		})
+
+		result.Status = domain.AnalyticsJobStatus.AssignedJob
+	}
+
 	return &pb.CreateAnalyticsJobReply{
 		Data: mappingDomainAnalyticsJobToPbAnalyticsJob(result),
 	}, nil
 }
+
 func (s *AnalyticsJobService) GetAnalyticsJob(ctx context.Context, req *pb.GetAnalyticsJobRequest) (*pb.GetAnalyticsJobReply, error) {
 	result, err := s.uc.GetAnalyticsJob(ctx, req.Id)
 
@@ -51,6 +75,7 @@ func (s *AnalyticsJobService) GetAnalyticsJob(ctx context.Context, req *pb.GetAn
 		Data: mappingDomainAnalyticsJobToPbAnalyticsJob(result),
 	}, nil
 }
+
 func (s *AnalyticsJobService) ListAnalyticsJob(ctx context.Context, req *pb.ListAnalyticsJobRequest) (*pb.ListAnalyticsJobReply, error) {
 	result, total, err := s.uc.ListAll(ctx, req.Offset, req.Limit)
 
@@ -67,6 +92,59 @@ func (s *AnalyticsJobService) ListAnalyticsJob(ctx context.Context, req *pb.List
 		Total: total,
 		Data:  data,
 	}, nil
+}
+
+func (s *AnalyticsJobService) CompleteAnalyticsJob(ctx context.Context, req *pb.CompleteAnalyticsJobRequest) (*pb.CompleteAnalyticsJobReply, error) {
+	if req.Id == "" {
+		return nil, errors.BadRequest(common.ErrorCodeInvalidRequest, "id is required")
+	}
+
+	nextStatus := domain.AnalyticsJobStatus.Complete
+	jobResult := req.Result
+	if req.Result == "" && req.Message != "" {
+		nextStatus = domain.AnalyticsJobStatus.Error
+		jobResult = req.Message
+	}
+
+	_, err := s.uc.UpdateAnalyticsJob(ctx, req.Id, &domain.AnalyticsJob{
+		Status: nextStatus,
+		Result: jobResult,
+	})
+
+	if err != nil {
+		return nil, errors.InternalServer(common.ErrorCodeInternalError, "can't save request")
+	}
+
+	return &pb.CompleteAnalyticsJobReply{
+		Message: "OK",
+	}, nil
+}
+
+func (s *AnalyticsJobService) RePushJob(ctx context.Context, req *pb.RePushJobRequest) (*pb.RePushJobReply, error) {
+	result, err := s.uc.GetAnalyticsJob(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.queueUsecase.SendJob(ctx, map[string]string{
+		"job_id":       req.Id,
+		"file_url":     result.FileUrl,
+		"video_url":    result.VideoUrl,
+		"callback_url": "http://go-api:8000/v1/analytics-job/result",
+	})
+
+	if err != nil {
+		s.log.Errorf("can't add job for %s", result.ID.Hex())
+		return nil, err
+	} else {
+		s.uc.UpdateAnalyticsJob(ctx, req.Id, &domain.AnalyticsJob{
+			Status: domain.AnalyticsJobStatus.AssignedJob,
+		})
+
+		result.Status = domain.AnalyticsJobStatus.AssignedJob
+	}
+
+	return &pb.RePushJobReply{Message: "OK"}, nil
 }
 
 func mappingDomainAnalyticsJobToPbAnalyticsJob(data *domain.AnalyticsJob) *pb.AnalyticsJobModel {

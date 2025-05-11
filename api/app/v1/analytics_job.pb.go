@@ -435,6 +435,198 @@ func (x *ListAnalyticsJobReply) GetTotal() int64 {
 	return 0
 }
 
+type CompleteAnalyticsJobRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Result        string                 `protobuf:"bytes,2,opt,name=result,proto3" json:"result,omitempty"`
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompleteAnalyticsJobRequest) Reset() {
+	*x = CompleteAnalyticsJobRequest{}
+	mi := &file_app_v1_analytics_job_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompleteAnalyticsJobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompleteAnalyticsJobRequest) ProtoMessage() {}
+
+func (x *CompleteAnalyticsJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_analytics_job_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompleteAnalyticsJobRequest.ProtoReflect.Descriptor instead.
+func (*CompleteAnalyticsJobRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_analytics_job_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *CompleteAnalyticsJobRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CompleteAnalyticsJobRequest) GetResult() string {
+	if x != nil {
+		return x.Result
+	}
+	return ""
+}
+
+func (x *CompleteAnalyticsJobRequest) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type CompleteAnalyticsJobReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompleteAnalyticsJobReply) Reset() {
+	*x = CompleteAnalyticsJobReply{}
+	mi := &file_app_v1_analytics_job_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompleteAnalyticsJobReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompleteAnalyticsJobReply) ProtoMessage() {}
+
+func (x *CompleteAnalyticsJobReply) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_analytics_job_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompleteAnalyticsJobReply.ProtoReflect.Descriptor instead.
+func (*CompleteAnalyticsJobReply) Descriptor() ([]byte, []int) {
+	return file_app_v1_analytics_job_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CompleteAnalyticsJobReply) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type RePushJobRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RePushJobRequest) Reset() {
+	*x = RePushJobRequest{}
+	mi := &file_app_v1_analytics_job_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RePushJobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RePushJobRequest) ProtoMessage() {}
+
+func (x *RePushJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_analytics_job_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RePushJobRequest.ProtoReflect.Descriptor instead.
+func (*RePushJobRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_analytics_job_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *RePushJobRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type RePushJobReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RePushJobReply) Reset() {
+	*x = RePushJobReply{}
+	mi := &file_app_v1_analytics_job_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RePushJobReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RePushJobReply) ProtoMessage() {}
+
+func (x *RePushJobReply) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_analytics_job_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RePushJobReply.ProtoReflect.Descriptor instead.
+func (*RePushJobReply) Descriptor() ([]byte, []int) {
+	return file_app_v1_analytics_job_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *RePushJobReply) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_app_v1_analytics_job_proto protoreflect.FileDescriptor
 
 const file_app_v1_analytics_job_proto_rawDesc = "" +
@@ -467,11 +659,23 @@ const file_app_v1_analytics_job_proto_rawDesc = "" +
 	"\x05limit\x18\x02 \x01(\x03R\x05limit\"`\n" +
 	"\x15ListAnalyticsJobReply\x121\n" +
 	"\x04data\x18\x01 \x03(\v2\x1d.api.app.v1.AnalyticsJobModelR\x04data\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x03R\x05total2\xfe\x02\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\"_\n" +
+	"\x1bCompleteAnalyticsJobRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
+	"\x06result\x18\x02 \x01(\tR\x06result\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"5\n" +
+	"\x19CompleteAnalyticsJobReply\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\"\n" +
+	"\x10RePushJobRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"*\n" +
+	"\x0eRePushJobReply\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage2\xf9\x04\n" +
 	"\fAnalyticsJob\x12~\n" +
 	"\x12CreateAnalyticsJob\x12%.api.app.v1.CreateAnalyticsJobRequest\x1a#.api.app.v1.CreateAnalyticsJobReply\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v1/analytics-job\x12w\n" +
 	"\x0fGetAnalyticsJob\x12\".api.app.v1.GetAnalyticsJobRequest\x1a .api.app.v1.GetAnalyticsJobReply\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/analytics-job/{id}\x12u\n" +
-	"\x10ListAnalyticsJob\x12#.api.app.v1.ListAnalyticsJobRequest\x1a!.api.app.v1.ListAnalyticsJobReply\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/analytics-jobBG\n" +
+	"\x10ListAnalyticsJob\x12#.api.app.v1.ListAnalyticsJobRequest\x1a!.api.app.v1.ListAnalyticsJobReply\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/analytics-job\x12\x8b\x01\n" +
+	"\x14CompleteAnalyticsJob\x12'.api.app.v1.CompleteAnalyticsJobRequest\x1a%.api.app.v1.CompleteAnalyticsJobReply\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\x1a\x18/v1/analytics-job/result\x12k\n" +
+	"\tRePushJob\x12\x1c.api.app.v1.RePushJobRequest\x1a\x1a.api.app.v1.RePushJobReply\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\x1a\x19/v1/analytics-job/re-pushBG\n" +
 	"\n" +
 	"api.app.v1P\x01Z7github.com/ntquang98/go-rkinetics-service/api/app/v1;v1b\x06proto3"
 
@@ -487,34 +691,42 @@ func file_app_v1_analytics_job_proto_rawDescGZIP() []byte {
 	return file_app_v1_analytics_job_proto_rawDescData
 }
 
-var file_app_v1_analytics_job_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_app_v1_analytics_job_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_app_v1_analytics_job_proto_goTypes = []any{
-	(*AnalyticsJobModel)(nil),         // 0: api.app.v1.AnalyticsJobModel
-	(*CreateAnalyticsJobRequest)(nil), // 1: api.app.v1.CreateAnalyticsJobRequest
-	(*CreateAnalyticsJobReply)(nil),   // 2: api.app.v1.CreateAnalyticsJobReply
-	(*GetAnalyticsJobRequest)(nil),    // 3: api.app.v1.GetAnalyticsJobRequest
-	(*GetAnalyticsJobReply)(nil),      // 4: api.app.v1.GetAnalyticsJobReply
-	(*ListAnalyticsJobRequest)(nil),   // 5: api.app.v1.ListAnalyticsJobRequest
-	(*ListAnalyticsJobReply)(nil),     // 6: api.app.v1.ListAnalyticsJobReply
-	(*timestamppb.Timestamp)(nil),     // 7: google.protobuf.Timestamp
+	(*AnalyticsJobModel)(nil),           // 0: api.app.v1.AnalyticsJobModel
+	(*CreateAnalyticsJobRequest)(nil),   // 1: api.app.v1.CreateAnalyticsJobRequest
+	(*CreateAnalyticsJobReply)(nil),     // 2: api.app.v1.CreateAnalyticsJobReply
+	(*GetAnalyticsJobRequest)(nil),      // 3: api.app.v1.GetAnalyticsJobRequest
+	(*GetAnalyticsJobReply)(nil),        // 4: api.app.v1.GetAnalyticsJobReply
+	(*ListAnalyticsJobRequest)(nil),     // 5: api.app.v1.ListAnalyticsJobRequest
+	(*ListAnalyticsJobReply)(nil),       // 6: api.app.v1.ListAnalyticsJobReply
+	(*CompleteAnalyticsJobRequest)(nil), // 7: api.app.v1.CompleteAnalyticsJobRequest
+	(*CompleteAnalyticsJobReply)(nil),   // 8: api.app.v1.CompleteAnalyticsJobReply
+	(*RePushJobRequest)(nil),            // 9: api.app.v1.RePushJobRequest
+	(*RePushJobReply)(nil),              // 10: api.app.v1.RePushJobReply
+	(*timestamppb.Timestamp)(nil),       // 11: google.protobuf.Timestamp
 }
 var file_app_v1_analytics_job_proto_depIdxs = []int32{
-	7, // 0: api.app.v1.AnalyticsJobModel.created_time:type_name -> google.protobuf.Timestamp
-	7, // 1: api.app.v1.AnalyticsJobModel.last_updated_time:type_name -> google.protobuf.Timestamp
-	0, // 2: api.app.v1.CreateAnalyticsJobReply.data:type_name -> api.app.v1.AnalyticsJobModel
-	0, // 3: api.app.v1.GetAnalyticsJobReply.data:type_name -> api.app.v1.AnalyticsJobModel
-	0, // 4: api.app.v1.ListAnalyticsJobReply.data:type_name -> api.app.v1.AnalyticsJobModel
-	1, // 5: api.app.v1.AnalyticsJob.CreateAnalyticsJob:input_type -> api.app.v1.CreateAnalyticsJobRequest
-	3, // 6: api.app.v1.AnalyticsJob.GetAnalyticsJob:input_type -> api.app.v1.GetAnalyticsJobRequest
-	5, // 7: api.app.v1.AnalyticsJob.ListAnalyticsJob:input_type -> api.app.v1.ListAnalyticsJobRequest
-	2, // 8: api.app.v1.AnalyticsJob.CreateAnalyticsJob:output_type -> api.app.v1.CreateAnalyticsJobReply
-	4, // 9: api.app.v1.AnalyticsJob.GetAnalyticsJob:output_type -> api.app.v1.GetAnalyticsJobReply
-	6, // 10: api.app.v1.AnalyticsJob.ListAnalyticsJob:output_type -> api.app.v1.ListAnalyticsJobReply
-	8, // [8:11] is the sub-list for method output_type
-	5, // [5:8] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	11, // 0: api.app.v1.AnalyticsJobModel.created_time:type_name -> google.protobuf.Timestamp
+	11, // 1: api.app.v1.AnalyticsJobModel.last_updated_time:type_name -> google.protobuf.Timestamp
+	0,  // 2: api.app.v1.CreateAnalyticsJobReply.data:type_name -> api.app.v1.AnalyticsJobModel
+	0,  // 3: api.app.v1.GetAnalyticsJobReply.data:type_name -> api.app.v1.AnalyticsJobModel
+	0,  // 4: api.app.v1.ListAnalyticsJobReply.data:type_name -> api.app.v1.AnalyticsJobModel
+	1,  // 5: api.app.v1.AnalyticsJob.CreateAnalyticsJob:input_type -> api.app.v1.CreateAnalyticsJobRequest
+	3,  // 6: api.app.v1.AnalyticsJob.GetAnalyticsJob:input_type -> api.app.v1.GetAnalyticsJobRequest
+	5,  // 7: api.app.v1.AnalyticsJob.ListAnalyticsJob:input_type -> api.app.v1.ListAnalyticsJobRequest
+	7,  // 8: api.app.v1.AnalyticsJob.CompleteAnalyticsJob:input_type -> api.app.v1.CompleteAnalyticsJobRequest
+	9,  // 9: api.app.v1.AnalyticsJob.RePushJob:input_type -> api.app.v1.RePushJobRequest
+	2,  // 10: api.app.v1.AnalyticsJob.CreateAnalyticsJob:output_type -> api.app.v1.CreateAnalyticsJobReply
+	4,  // 11: api.app.v1.AnalyticsJob.GetAnalyticsJob:output_type -> api.app.v1.GetAnalyticsJobReply
+	6,  // 12: api.app.v1.AnalyticsJob.ListAnalyticsJob:output_type -> api.app.v1.ListAnalyticsJobReply
+	8,  // 13: api.app.v1.AnalyticsJob.CompleteAnalyticsJob:output_type -> api.app.v1.CompleteAnalyticsJobReply
+	10, // 14: api.app.v1.AnalyticsJob.RePushJob:output_type -> api.app.v1.RePushJobReply
+	10, // [10:15] is the sub-list for method output_type
+	5,  // [5:10] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_app_v1_analytics_job_proto_init() }
@@ -528,7 +740,7 @@ func file_app_v1_analytics_job_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_v1_analytics_job_proto_rawDesc), len(file_app_v1_analytics_job_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

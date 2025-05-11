@@ -63,6 +63,42 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.app.v1.CreateAnalyticsJobReply'
+    /v1/analytics-job/re-push:
+        put:
+            tags:
+                - AnalyticsJob
+            operationId: AnalyticsJob_RePushJob
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.app.v1.RePushJobRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.app.v1.RePushJobReply'
+    /v1/analytics-job/result:
+        put:
+            tags:
+                - AnalyticsJob
+            operationId: AnalyticsJob_CompleteAnalyticsJob
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.app.v1.CompleteAnalyticsJobRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.app.v1.CompleteAnalyticsJobReply'
     /v1/analytics-job/{id}:
         get:
             tags:
@@ -126,6 +162,20 @@ components:
                     type: string
                 result:
                     type: string
+        api.app.v1.CompleteAnalyticsJobReply:
+            type: object
+            properties:
+                message:
+                    type: string
+        api.app.v1.CompleteAnalyticsJobRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                result:
+                    type: string
+                message:
+                    type: string
         api.app.v1.CreateAnalyticsJobReply:
             type: object
             properties:
@@ -157,6 +207,16 @@ components:
                     items:
                         $ref: '#/components/schemas/api.app.v1.AnalyticsJobModel'
                 total:
+                    type: string
+        api.app.v1.RePushJobReply:
+            type: object
+            properties:
+                message:
+                    type: string
+        api.app.v1.RePushJobRequest:
+            type: object
+            properties:
+                id:
                     type: string
         api.file.v1.UploadFileReply:
             type: object

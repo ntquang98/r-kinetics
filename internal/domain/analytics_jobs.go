@@ -9,15 +9,19 @@ import (
 type StatusValue string
 
 type status struct {
-	Draft      StatusValue
-	Processing StatusValue
-	Complete   StatusValue
+	Draft       StatusValue
+	AssignedJob StatusValue
+	Processing  StatusValue
+	Complete    StatusValue
+	Error       StatusValue
 }
 
 var AnalyticsJobStatus = status{
-	Draft:      "DRAFT",
-	Processing: "PROCESSING",
-	Complete:   "COMPLETE",
+	Draft:       "DRAFT",
+	AssignedJob: "ASSIGNED_JOB",
+	Processing:  "PROCESSING",
+	Complete:    "COMPLETE",
+	Error:       "ERROR",
 }
 
 type AnalyticsJob struct {

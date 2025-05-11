@@ -19,14 +19,18 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationAnalyticsJobCompleteAnalyticsJob = "/api.app.v1.AnalyticsJob/CompleteAnalyticsJob"
 const OperationAnalyticsJobCreateAnalyticsJob = "/api.app.v1.AnalyticsJob/CreateAnalyticsJob"
 const OperationAnalyticsJobGetAnalyticsJob = "/api.app.v1.AnalyticsJob/GetAnalyticsJob"
 const OperationAnalyticsJobListAnalyticsJob = "/api.app.v1.AnalyticsJob/ListAnalyticsJob"
+const OperationAnalyticsJobRePushJob = "/api.app.v1.AnalyticsJob/RePushJob"
 
 type AnalyticsJobHTTPServer interface {
+	CompleteAnalyticsJob(context.Context, *CompleteAnalyticsJobRequest) (*CompleteAnalyticsJobReply, error)
 	CreateAnalyticsJob(context.Context, *CreateAnalyticsJobRequest) (*CreateAnalyticsJobReply, error)
 	GetAnalyticsJob(context.Context, *GetAnalyticsJobRequest) (*GetAnalyticsJobReply, error)
 	ListAnalyticsJob(context.Context, *ListAnalyticsJobRequest) (*ListAnalyticsJobReply, error)
+	RePushJob(context.Context, *RePushJobRequest) (*RePushJobReply, error)
 }
 
 func RegisterAnalyticsJobHTTPServer(s *http.Server, srv AnalyticsJobHTTPServer) {
@@ -34,6 +38,8 @@ func RegisterAnalyticsJobHTTPServer(s *http.Server, srv AnalyticsJobHTTPServer) 
 	r.POST("/v1/analytics-job", _AnalyticsJob_CreateAnalyticsJob0_HTTP_Handler(srv))
 	r.GET("/v1/analytics-job/{id}", _AnalyticsJob_GetAnalyticsJob0_HTTP_Handler(srv))
 	r.GET("/v1/analytics-job", _AnalyticsJob_ListAnalyticsJob0_HTTP_Handler(srv))
+	r.PUT("/v1/analytics-job/result", _AnalyticsJob_CompleteAnalyticsJob0_HTTP_Handler(srv))
+	r.PUT("/v1/analytics-job/re-push", _AnalyticsJob_RePushJob0_HTTP_Handler(srv))
 }
 
 func _AnalyticsJob_CreateAnalyticsJob0_HTTP_Handler(srv AnalyticsJobHTTPServer) func(ctx http.Context) error {
@@ -99,10 +105,56 @@ func _AnalyticsJob_ListAnalyticsJob0_HTTP_Handler(srv AnalyticsJobHTTPServer) fu
 	}
 }
 
+func _AnalyticsJob_CompleteAnalyticsJob0_HTTP_Handler(srv AnalyticsJobHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CompleteAnalyticsJobRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAnalyticsJobCompleteAnalyticsJob)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CompleteAnalyticsJob(ctx, req.(*CompleteAnalyticsJobRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CompleteAnalyticsJobReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AnalyticsJob_RePushJob0_HTTP_Handler(srv AnalyticsJobHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in RePushJobRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAnalyticsJobRePushJob)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.RePushJob(ctx, req.(*RePushJobRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*RePushJobReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type AnalyticsJobHTTPClient interface {
+	CompleteAnalyticsJob(ctx context.Context, req *CompleteAnalyticsJobRequest, opts ...http.CallOption) (rsp *CompleteAnalyticsJobReply, err error)
 	CreateAnalyticsJob(ctx context.Context, req *CreateAnalyticsJobRequest, opts ...http.CallOption) (rsp *CreateAnalyticsJobReply, err error)
 	GetAnalyticsJob(ctx context.Context, req *GetAnalyticsJobRequest, opts ...http.CallOption) (rsp *GetAnalyticsJobReply, err error)
 	ListAnalyticsJob(ctx context.Context, req *ListAnalyticsJobRequest, opts ...http.CallOption) (rsp *ListAnalyticsJobReply, err error)
+	RePushJob(ctx context.Context, req *RePushJobRequest, opts ...http.CallOption) (rsp *RePushJobReply, err error)
 }
 
 type AnalyticsJobHTTPClientImpl struct {
@@ -111,6 +163,19 @@ type AnalyticsJobHTTPClientImpl struct {
 
 func NewAnalyticsJobHTTPClient(client *http.Client) AnalyticsJobHTTPClient {
 	return &AnalyticsJobHTTPClientImpl{client}
+}
+
+func (c *AnalyticsJobHTTPClientImpl) CompleteAnalyticsJob(ctx context.Context, in *CompleteAnalyticsJobRequest, opts ...http.CallOption) (*CompleteAnalyticsJobReply, error) {
+	var out CompleteAnalyticsJobReply
+	pattern := "/v1/analytics-job/result"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAnalyticsJobCompleteAnalyticsJob))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *AnalyticsJobHTTPClientImpl) CreateAnalyticsJob(ctx context.Context, in *CreateAnalyticsJobRequest, opts ...http.CallOption) (*CreateAnalyticsJobReply, error) {
@@ -146,6 +211,19 @@ func (c *AnalyticsJobHTTPClientImpl) ListAnalyticsJob(ctx context.Context, in *L
 	opts = append(opts, http.Operation(OperationAnalyticsJobListAnalyticsJob))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *AnalyticsJobHTTPClientImpl) RePushJob(ctx context.Context, in *RePushJobRequest, opts ...http.CallOption) (*RePushJobReply, error) {
+	var out RePushJobReply
+	pattern := "/v1/analytics-job/re-push"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAnalyticsJobRePushJob))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

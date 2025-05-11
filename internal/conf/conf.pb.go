@@ -130,6 +130,7 @@ type Data struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Mongo         *Data_Mongo            `protobuf:"bytes,1,opt,name=mongo,proto3" json:"mongo,omitempty"`
 	S3            *Data_S3               `protobuf:"bytes,2,opt,name=s3,proto3" json:"s3,omitempty"`
+	Sqs           *Data_SQS              `protobuf:"bytes,3,opt,name=sqs,proto3" json:"sqs,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -174,6 +175,13 @@ func (x *Data) GetMongo() *Data_Mongo {
 func (x *Data) GetS3() *Data_S3 {
 	if x != nil {
 		return x.S3
+	}
+	return nil
+}
+
+func (x *Data) GetSqs() *Data_SQS {
+	if x != nil {
+		return x.Sqs
 	}
 	return nil
 }
@@ -466,6 +474,58 @@ func (x *Data_S3) GetBucket() string {
 	return ""
 }
 
+type Data_SQS struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Qname         string                 `protobuf:"bytes,1,opt,name=qname,proto3" json:"qname,omitempty"`
+	Account       string                 `protobuf:"bytes,2,opt,name=account,proto3" json:"account,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Data_SQS) Reset() {
+	*x = Data_SQS{}
+	mi := &file_conf_conf_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Data_SQS) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Data_SQS) ProtoMessage() {}
+
+func (x *Data_SQS) ProtoReflect() protoreflect.Message {
+	mi := &file_conf_conf_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Data_SQS.ProtoReflect.Descriptor instead.
+func (*Data_SQS) Descriptor() ([]byte, []int) {
+	return file_conf_conf_proto_rawDescGZIP(), []int{2, 2}
+}
+
+func (x *Data_SQS) GetQname() string {
+	if x != nil {
+		return x.Qname
+	}
+	return ""
+}
+
+func (x *Data_SQS) GetAccount() string {
+	if x != nil {
+		return x.Account
+	}
+	return ""
+}
+
 var File_conf_conf_proto protoreflect.FileDescriptor
 
 const file_conf_conf_proto_rawDesc = "" +
@@ -485,10 +545,11 @@ const file_conf_conf_proto_rawDesc = "" +
 	"\x04GRPC\x12\x18\n" +
 	"\anetwork\x18\x01 \x01(\tR\anetwork\x12\x12\n" +
 	"\x04addr\x18\x02 \x01(\tR\x04addr\x123\n" +
-	"\atimeout\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\xb2\x03\n" +
+	"\atimeout\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\x91\x04\n" +
 	"\x04Data\x12,\n" +
 	"\x05mongo\x18\x01 \x01(\v2\x16.kratos.api.Data.MongoR\x05mongo\x12#\n" +
-	"\x02s3\x18\x02 \x01(\v2\x13.kratos.api.Data.S3R\x02s3\x1a\xf0\x01\n" +
+	"\x02s3\x18\x02 \x01(\v2\x13.kratos.api.Data.S3R\x02s3\x12&\n" +
+	"\x03sqs\x18\x03 \x01(\v2\x14.kratos.api.Data.SQSR\x03sqs\x1a\xf0\x01\n" +
 	"\x05Mongo\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1a\n" +
@@ -502,7 +563,10 @@ const file_conf_conf_proto_rawDesc = "" +
 	"\x06access\x18\x01 \x01(\tR\x06access\x12\x16\n" +
 	"\x06secret\x18\x02 \x01(\tR\x06secret\x12\x16\n" +
 	"\x06region\x18\x03 \x01(\tR\x06region\x12\x16\n" +
-	"\x06bucket\x18\x04 \x01(\tR\x06bucketB)Z'go-rkinetics-service/internal/conf;confb\x06proto3"
+	"\x06bucket\x18\x04 \x01(\tR\x06bucket\x1a5\n" +
+	"\x03SQS\x12\x14\n" +
+	"\x05qname\x18\x01 \x01(\tR\x05qname\x12\x18\n" +
+	"\aaccount\x18\x02 \x01(\tR\aaccountB)Z'go-rkinetics-service/internal/conf;confb\x06proto3"
 
 var (
 	file_conf_conf_proto_rawDescOnce sync.Once
@@ -516,7 +580,7 @@ func file_conf_conf_proto_rawDescGZIP() []byte {
 	return file_conf_conf_proto_rawDescData
 }
 
-var file_conf_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_conf_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_conf_conf_proto_goTypes = []any{
 	(*Bootstrap)(nil),           // 0: kratos.api.Bootstrap
 	(*Server)(nil),              // 1: kratos.api.Server
@@ -525,7 +589,8 @@ var file_conf_conf_proto_goTypes = []any{
 	(*Server_GRPC)(nil),         // 4: kratos.api.Server.GRPC
 	(*Data_Mongo)(nil),          // 5: kratos.api.Data.Mongo
 	(*Data_S3)(nil),             // 6: kratos.api.Data.S3
-	(*durationpb.Duration)(nil), // 7: google.protobuf.Duration
+	(*Data_SQS)(nil),            // 7: kratos.api.Data.SQS
+	(*durationpb.Duration)(nil), // 8: google.protobuf.Duration
 }
 var file_conf_conf_proto_depIdxs = []int32{
 	1, // 0: kratos.api.Bootstrap.server:type_name -> kratos.api.Server
@@ -534,13 +599,14 @@ var file_conf_conf_proto_depIdxs = []int32{
 	4, // 3: kratos.api.Server.grpc:type_name -> kratos.api.Server.GRPC
 	5, // 4: kratos.api.Data.mongo:type_name -> kratos.api.Data.Mongo
 	6, // 5: kratos.api.Data.s3:type_name -> kratos.api.Data.S3
-	7, // 6: kratos.api.Server.HTTP.timeout:type_name -> google.protobuf.Duration
-	7, // 7: kratos.api.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	7, // 6: kratos.api.Data.sqs:type_name -> kratos.api.Data.SQS
+	8, // 7: kratos.api.Server.HTTP.timeout:type_name -> google.protobuf.Duration
+	8, // 8: kratos.api.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	9, // [9:9] is the sub-list for method output_type
+	9, // [9:9] is the sub-list for method input_type
+	9, // [9:9] is the sub-list for extension type_name
+	9, // [9:9] is the sub-list for extension extendee
+	0, // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_conf_conf_proto_init() }
@@ -554,7 +620,7 @@ func file_conf_conf_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conf_conf_proto_rawDesc), len(file_conf_conf_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

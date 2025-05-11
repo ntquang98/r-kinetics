@@ -24,3 +24,6 @@ data:
     secret: "${APP_DATA_S3_SECRET_KEY}"
     region: "${APP_DATA_S3_REGION}" 
     bucket: "${APP_DATA_S3_BUCKET}"
+  sqs:
+    qname: "${APP_DATA_SQS_QNAME}"
+    account: "${APP_DATA_SQS_ACCOUNT}"

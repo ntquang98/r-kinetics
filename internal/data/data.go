@@ -15,6 +15,7 @@ var ProviderSet = wire.NewSet(
 	NewGreeterRepo,
 	NewS3FileRepo,
 	NewAnalyticsJobRepo,
+	NewSqsRepo,
 )
 
 // Data .
