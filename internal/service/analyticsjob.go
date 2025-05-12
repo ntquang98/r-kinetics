@@ -37,6 +37,7 @@ func (s *AnalyticsJobService) CreateAnalyticsJob(ctx context.Context, req *pb.Cr
 	})
 
 	if err != nil {
+		s.log.Errorf("can't create analytics job: %s", err.Error())
 		return nil, err
 	}
 
@@ -112,6 +113,7 @@ func (s *AnalyticsJobService) CompleteAnalyticsJob(ctx context.Context, req *pb.
 	})
 
 	if err != nil {
+		s.log.Errorf("can't update analytics job: %s", err.Error())
 		return nil, errors.InternalServer(common.ErrorCodeInternalError, "can't save request")
 	}
 
