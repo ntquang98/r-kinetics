@@ -51,7 +51,7 @@ func (s *AnalyticsJobService) CreateAnalyticsJob(ctx context.Context, req *pb.Cr
 	})
 
 	if err != nil {
-		s.log.Errorf("can't add job for %s", result.ID.Hex())
+		s.log.Errorf("can't add job for %s, Error: %s", result.ID.Hex(), err.Error())
 	} else {
 		s.uc.UpdateAnalyticsJob(ctx, id, &domain.AnalyticsJob{
 			Status: domain.AnalyticsJobStatus.AssignedJob,
@@ -136,7 +136,7 @@ func (s *AnalyticsJobService) RePushJob(ctx context.Context, req *pb.RePushJobRe
 	})
 
 	if err != nil {
-		s.log.Errorf("can't add job for %s", result.ID.Hex())
+		s.log.Errorf("can't add job for %s. Error: %s", result.ID.Hex(), err.Error())
 		return nil, err
 	} else {
 		s.uc.UpdateAnalyticsJob(ctx, req.Id, &domain.AnalyticsJob{
