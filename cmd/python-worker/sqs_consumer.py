@@ -5,12 +5,12 @@ import traceback
 
 import boto3
 import requests
-from inference import InferenceEngine
+# from inference import InferenceEngine
+from inference_keras_model import InferenceEngine
 
-print("Using AWS creds:", os.environ.get("AWS_ACCESS_KEY_ID"), os.environ.get("AWS_REGION"))
 
 QUEUE_URL = os.environ.get("SQS_QUEUE_URL")
-POLL_INTERVAL = 5
+POLL_INTERVAL = 3
 
 sqs = boto3.client("sqs", region_name=os.environ["AWS_REGION"])
 engine = InferenceEngine()
